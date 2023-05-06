@@ -103,10 +103,17 @@ export default function SearchableSelect({
     const showCreateButton =
         !b_isSearching && s_searchTerm.trim() && !a_results.length;
 
+    const [b_isMouseDownParent, setIsMouseDownParent] = useState(false);
+
     return (
         <div
             onFocus={() => setShowResults(true)}
-            onBlur={() => setShowResults(false)}
+            // Mouse down/up to check if an option was clicked (click down inside element) or the click was outside
+            // this element. If that's not handled, the click on the options is not registered, since those are
+            // hidden on this element's blur
+            onMouseDown={() => setIsMouseDownParent(true)}
+            onBlur={() => !b_isMouseDownParent && setShowResults(false)}
+            onMouseUp={() => setIsMouseDownParent(false)}
         >
             <input
                 className="form-select"
@@ -138,6 +145,7 @@ export default function SearchableSelect({
                     const style: any = {
                         height: '28px',
                         padding: '5px 3px',
+                        cursor: 'pointer',
                     };
 
                     if (s_optionIdHovered === o_result.id) {
@@ -149,13 +157,13 @@ export default function SearchableSelect({
                         <div
                             key={o_result.id}
                             style={style}
-                            onClick={(ev) => {
-                                setOptionIdHovered(o_result.id);
-                                setSearchTerm('');
-
-                                onSelection(o_result.id);
-                            }}
                             onMouseEnter={() => setOptionIdHovered(o_result.id)}
+                            onClick={() => {
+                                setSearchTerm('');
+                                setShowResults(false);
+                                onSelection(o_result.id);
+                                filterOptions('');
+                            }}
                         >
                             {o_result.label}
                         </div>
