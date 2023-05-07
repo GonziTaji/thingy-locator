@@ -23,10 +23,14 @@ interface SearchableSelectProps {
 function debounce(fn: any, delay: number) {
     let lastTimeoutId: any;
 
+    const _args = arguments;
+
     return function () {
         clearTimeout(lastTimeoutId);
 
-        lastTimeoutId = setTimeout(() => fn.apply(null, arguments), delay);
+        lastTimeoutId = setTimeout(function () {
+            fn.apply(null, _args), delay;
+        });
     } as (...args: any[]) => void;
 }
 
