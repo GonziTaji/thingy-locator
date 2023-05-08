@@ -1,88 +1,11 @@
-import { Dispatch, RefObject, SetStateAction, useRef, useState } from 'react';
-import SearchableSelect from './SearchableSelect';
+import { RefObject, useRef, useState } from 'react';
+import TagSelect from './TagSelect';
 
 interface Thingy {
     name: string;
     location: string;
     tags: string[];
 }
-
-const __tags = ['ropa', 'herramientas', 'muebles'];
-
-interface TagSelectorProps {
-    tags: string[];
-    setTags: Dispatch<SetStateAction<string[]>>;
-}
-
-const TagSelector = ({ tags, setTags }: TagSelectorProps) => {
-    const [knownTags, setKnownTags] = useState<string[]>(__tags);
-
-    // async to mimic request to server
-    async function createTag(newTag: string) {
-        if (!newTag) {
-            throw 'tag cannot be empty';
-        }
-
-        setKnownTags([...knownTags, newTag]);
-        setTags([...tags, newTag]);
-    }
-
-    function onTagSelection(selectedTag: string) {
-        if (selectedTag && -1 === tags.indexOf(selectedTag)) {
-            setTags([selectedTag, ...tags]);
-        }
-    }
-
-    async function searchTags(term: string) {
-        return term.trim()
-            ? getOptionsFromTags(
-                  knownTags.filter((tag) => new RegExp(term, 'i').test(tag))
-              )
-            : getOptionsFromTags(knownTags);
-    }
-
-    function getOptionsFromTags(_tags: string[]) {
-        return _tags.map((tag) => ({
-            label: tag,
-            id: tag,
-            hovered: false,
-        }));
-    }
-
-    function removeTag(tagToRemove: string) {
-        setTags(tags.filter((tag) => tag !== tagToRemove));
-    }
-
-    return (
-        <div>
-            <div className="flex gap-3">
-                {tags.map((tag, i) => (
-                    <div
-                        key={i}
-                        className="flex align-middle border border-slate-500 bg-sky-100 rounded-lg pe-4 py-1"
-                    >
-                        <button
-                            className="text-slate-700 font-bold px-2"
-                            type="button"
-                            onClick={() => removeTag(tag)}
-                        >
-                            x
-                        </button>
-                        <span className="text-slate-400">|</span>
-                        <span className="ps-2">{tag}</span>
-                    </div>
-                ))}
-            </div>
-            <SearchableSelect
-                onSearch={searchTags}
-                onSelection={onTagSelection}
-                options={getOptionsFromTags(knownTags)}
-                placeholder="Search or create a keyword"
-                createTag={createTag}
-            />
-        </div>
-    );
-};
 
 interface ThingyFormProps {
     addThingy: (thingy: Thingy) => void;
@@ -95,6 +18,16 @@ const ThingyForm = ({ addThingy }: ThingyFormProps) => {
 
     const nameInputRef = useRef<HTMLInputElement>(null);
     const locationInputRef = useRef<HTMLInputElement>(null);
+
+    function onTagSelection(selectedTag: string) {
+        if (selectedTag && -1 === tags.indexOf(selectedTag)) {
+            setTags([selectedTag, ...tags]);
+        }
+    }
+
+    function removeTag(tagToRemove: string) {
+        setTags(tags.filter((tag) => tag !== tagToRemove));
+    }
 
     function addThingyAndClear() {
         const refs: [RefObject<HTMLInputElement>, string][] = [
@@ -112,14 +45,10 @@ const ThingyForm = ({ addThingy }: ThingyFormProps) => {
             }
         }
 
-        addThingy({
-            name,
-            location,
-            tags: [],
-        });
-
+        addThingy({ name, location, tags });
         setName('');
         setLocation('');
+        setTags([]);
     }
 
     return (
@@ -147,10 +76,28 @@ const ThingyForm = ({ addThingy }: ThingyFormProps) => {
                 required
             />
 
-            <div>
-                <span>Add some words that help you remember the thing</span>
-                <TagSelector tags={tags} setTags={setTags} />
+            <span>Add some words that help you remember the thing</span>
+
+            <div className="flex gap-3">
+                {tags.map((tag, i) => (
+                    <div
+                        key={i}
+                        className="flex align-middle border border-slate-500 bg-sky-100 rounded-lg pe-4 py-1"
+                    >
+                        <button
+                            className="text-slate-700 font-bold px-2"
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                        >
+                            x
+                        </button>
+                        <span className="text-slate-400">|</span>
+                        <span className="ps-2">{tag}</span>
+                    </div>
+                ))}
             </div>
+
+            <TagSelect onSelection={onTagSelection} />
 
             <button
                 className="px-2 py-1 border border-gray-400 bg-gray-200"
