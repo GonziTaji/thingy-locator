@@ -1,4 +1,4 @@
-import { RefObject, useRef, useState } from 'react';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import TagSelect from './TagSelect';
 
 interface Thingy {
@@ -6,6 +6,8 @@ interface Thingy {
     location: string;
     tags: string[];
 }
+
+const THINGY_LIST_STORAGE_KEY = 'gt_thingy_list';
 
 interface ThingyFormProps {
     addThingy: (thingy: Thingy) => void;
@@ -112,6 +114,36 @@ const ThingyForm = ({ addThingy }: ThingyFormProps) => {
 
 export default function ThingyList({ className }: { className: string }) {
     const [thingyList, setThingyList] = useState<Thingy[]>([]);
+
+    useEffect(() => {
+        let thingiesInStorage = localStorage.getItem(THINGY_LIST_STORAGE_KEY);
+
+        if (thingiesInStorage) {
+            try {
+                thingiesInStorage = JSON.parse(thingiesInStorage);
+                console.log(thingiesInStorage);
+
+                if (
+                    Array.isArray(thingiesInStorage) &&
+                    thingiesInStorage.length
+                ) {
+                    setThingyList(thingiesInStorage);
+                }
+            } catch (e: any) {
+                alert(
+                    `Tasks in localstorage could not be loaded because of an error: ${e.message}. \nStarting fresh!`
+                );
+                console.error(e);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem(
+            THINGY_LIST_STORAGE_KEY,
+            JSON.stringify(thingyList)
+        );
+    }, [thingyList]);
 
     function addThingy(thingy: Thingy) {
         setThingyList([thingy, ...thingyList]);
